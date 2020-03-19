@@ -68,6 +68,16 @@ double RobotPoseObservationModel::measure(const RobotState &state) const {
   if (weight < min_weight_) {
     weight = min_weight_;   
   }
+
+  // reduce weight if particle is to far outside of the field:
+  float range = config_.resampling_out_of_field_range;
+  if (state.getXPos() > 3 + range
+    || state.getXPos() < -3 - range
+    || state.getYPos() > 2 + range
+    || state.getYPos() < -2 - range){
+    weight = weight - config_.weight_decrease;
+  }
+
   return weight; //exponential?
 }
 
