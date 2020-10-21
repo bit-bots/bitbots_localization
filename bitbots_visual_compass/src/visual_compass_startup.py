@@ -5,11 +5,11 @@ import rospkg
 import actionlib
 import math
 from cv2 import KeyPoint
-import cPickle as pickle
+import pickle
 from cv_bridge import CvBridge
 from sensor_msgs.msg import Image
 from dynamic_reconfigure.server import Server
-from tf_conversions.transformations import quaternion_from_euler
+from tf.transformations import quaternion_from_euler
 from humanoid_league_msgs.msg import GameState, PoseWithCertaintyStamped
 from bitbots_visual_compass.cfg import VisualCompassConfig
 from worker import VisualCompass
