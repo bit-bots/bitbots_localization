@@ -17,6 +17,7 @@
 #include <visualization_msgs/Marker.h>
 #include <visualization_msgs/MarkerArray.h>
 #include <geometry_msgs/Point.h>
+#include <geometry_msgs/Point32.h>
 #include <geometry_msgs/Pose.h>
 #include <geometry_msgs/PoseStamped.h>
 #include <geometry_msgs/PoseArray.h>
@@ -24,7 +25,7 @@
 #include <geometry_msgs/PoseWithCovarianceStamped.h>
 #include <geometry_msgs/TransformStamped.h>
 #include <geometry_msgs/Twist.h>
-#include <sensor_msgs/CameraInfo.h>
+#include <geometry_msgs/PolygonStamped.h>
 #include <sensor_msgs/CameraInfo.h>
 
 #include <tf2_ros/transform_listener.h>
@@ -45,11 +46,7 @@
 
 #include <humanoid_league_msgs/LineInformationRelative.h>
 #include <humanoid_league_msgs/LineSegmentRelative.h>
-#include <humanoid_league_msgs/GoalRelative.h>
-#include <humanoid_league_msgs/PixelRelative.h>
-#include <humanoid_league_msgs/PixelsRelative.h>
-#include <humanoid_league_msgs/FieldBoundaryRelative.h>
-#include <humanoid_league_msgs/FieldBoundaryInImage.h>
+#include <humanoid_league_msgs/PoseWithCertaintyArray.h>
 
 #include <bitbots_localization/map.h>
 #include <bitbots_localization/LocalizationConfig.h>
@@ -65,8 +62,10 @@
 #include <cv_bridge/cv_bridge.h>
 #include <image_transport/image_transport.h>
 #include <sensor_msgs/image_encodings.h>
+#include <sensor_msgs/PointCloud2.h>
 
 namespace bl = bitbots_localization;
+namespace sm = sensor_msgs;
 namespace hlm = humanoid_league_msgs;
 namespace gm = geometry_msgs;
 namespace pf = particle_filter;
@@ -83,17 +82,13 @@ class Localization {
 
   void LineCallback(const hlm::LineInformationRelative &msg);
 
-  void GoalCallback(const hlm::GoalRelative &msg); //TODO
+  void LinePointcloudCallback(const sm::PointCloud2 &msg);
 
-  void FieldboundaryCallback(const hlm::FieldBoundaryRelative &msg);
+  void GoalPostsCallback(const hlm::PoseWithCertaintyArray &msg); //TODO
 
-  void CornerCallback(const hlm::PixelsRelative &msg);
+  void FieldboundaryCallback(const gm::PolygonStamped &msg);
 
-  void TCrossingsCallback(const hlm::PixelsRelative &msg);
-
-  void CrossesCallback(const hlm::PixelsRelative &msg);
-
-  void FieldBoundaryInImageCallback(const hlm::FieldBoundaryInImage &msg);
+  void FieldBoundaryInImageCallback(const gm::PolygonStamped &msg);
 
   void reset_filter(int distribution);
 
@@ -103,6 +98,7 @@ class Localization {
 
  private:
   ros::Subscriber line_subscriber_;
+  ros::Subscriber line_point_cloud_subscriber_;
   ros::Subscriber goal_subscriber_;
   ros::Subscriber fieldboundary_subscriber_;
   ros::Subscriber corners_subscriber_;
@@ -143,22 +139,18 @@ class Localization {
   bool resampled_ = false;
 
   hlm::LineInformationRelative line_information_relative_;
-  hlm::GoalRelative goal_relative_;
-  hlm::FieldBoundaryRelative fieldboundary_relative_;
-  hlm::PixelsRelative corners_;
-  hlm::PixelsRelative t_crossings_;
-  hlm::PixelsRelative crosses_;
-  sensor_msgs::CameraInfo cam_info_;
-  std::vector<hlm::FieldBoundaryInImage> fieldboundary_in_image_;
+  sm::PointCloud2 line_pointcloud_relative_;
+  hlm::PoseWithCertaintyArray goal_posts_relative_;
+  gm::PolygonStamped fieldboundary_relative_;
+  sm::CameraInfo cam_info_;
+  std::vector<gm::PolygonStamped> fieldboundary_in_image_;
 
   ros::Time last_stamp_lines = ros::Time(0);
+  ros::Time last_stamp_lines_pc = ros::Time(0);
   ros::Time last_stamp_goals = ros::Time(0);
   ros::Time last_stamp_fb_points = ros::Time(0);
-  ros::Time last_stamp_corners = ros::Time(0);
-  ros::Time last_stamp_tcrossings = ros::Time(0);
-  ros::Time last_stamp_crosses = ros::Time(0);
 
-  std::vector<gm::Point> interpolateFieldboundaryPoints(gm::Point point1, gm::Point point2);
+  std::vector<gm::Point32> interpolateFieldboundaryPoints(gm::Point32 point1, gm::Point32 point2);
 
   void run_filter_one_step(const ros::TimerEvent &e);
 
@@ -170,7 +162,7 @@ class Localization {
   std::shared_ptr<Map> crosses_map_;
 
   gmms::GaussianMixtureModel pose_gmm_;
-  std::vector<gm::Point> line_points_;
+  std::vector<gm::Point32> line_points_;
   particle_filter::CRandomNumberGenerator random_number_generator_;
   bl::LocalizationConfig config_;
   std_msgs::ColorRGBA marker_color;
@@ -186,17 +178,12 @@ class Localization {
 
   void publish_ratings();
 
-  void publish_line_ratings();
-
-  void publish_goal_ratings();
-
-  void publish_field_boundary_ratings();
-
-  void publish_corner_ratings();
-
-  void publish_t_crossings_ratings();
-
-  void publish_crosses_ratings();
+  void publish_debug_rating(
+    std::vector<std::pair<double, double>>    measurements,
+    double scale,
+    const char name[24],
+    std::shared_ptr<Map> map,
+    ros::Publisher &publisher);
 
   void updateMeasurements();
 
