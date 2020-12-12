@@ -58,7 +58,7 @@
   min_resampling_weight: 0.5
   weight_decrease: 0.01
   resampling_out_of_field_range: 0.5  # in m
-  percentage_best_particles: 100
+  percentage_best_particles: 50
 
   distance_factor : 0.5
   lines_factor: 1
