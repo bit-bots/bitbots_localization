@@ -71,7 +71,7 @@ double RobotPoseObservationModel::measure(const RobotState &state) const {
   }
 
 
-  // reduce weight if particle is too far outside of the field:  TODO: use this later
+  // reduce weight if particle is too far outside of the field:
   float range = config_.out_of_field_range;
   if ( state.getXPos() > (config_.field_x + config_.field_padding)/2 + range
     || state.getXPos() < -(config_.field_x + config_.field_padding)/2 - range
