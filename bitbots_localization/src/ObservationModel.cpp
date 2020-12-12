@@ -20,6 +20,7 @@ RobotPoseObservationModel::RobotPoseObservationModel(std::shared_ptr<Map> map_li
   map_t_crossings_ = map_t_crossings;
   map_crosses_ = map_crosses;
   config_ = config;
+  //field_config_ = field_config;  // TODO: add this
   particle_filter::ObservationModel<RobotState>::accumulate_weights_ = true;
 
 }
@@ -70,14 +71,23 @@ double RobotPoseObservationModel::measure(const RobotState &state) const {
     weight = min_weight_;
   }
 
-  // reduce weight if particle is to far outside of the field:
+  // reduce weight if particle is too far outside of the field:  TODO: remove this later
   float range = config_.resampling_out_of_field_range;
-  if (state.getXPos() > 3 + range
+  if ( state.getXPos() > 3 + range
     || state.getXPos() < -3 - range
     || state.getYPos() > 2 + range
     || state.getYPos() < -2 - range){
     weight = weight - config_.weight_decrease;
   }
+
+  // reduce weight if particle is too far outside of the field:  TODO: use this later
+//  float range = config_.resampling_out_of_field_range;
+//  if ( state.getXPos() > (field_config_.field_x + field_config_.padding)/2 + range
+//    || state.getXPos() < -(field_config_.field_x + field_config_.padding)/2 - range
+//    || state.getYPos() > (field_config_.field_y + field_config_.padding)/2 + range
+//    || state.getYPos() < -(field_config_.field_y + field_config_.padding)/2 - range){
+//    weight = weight - config_.weight_decrease;
+//  }
 
   return weight; //exponential?
 }
